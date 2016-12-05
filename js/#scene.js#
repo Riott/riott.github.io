@@ -1,0 +1,50 @@
+
+
+
+var width = window.innerWidth;
+var height = window.innerHeight;
+
+
+function init() {
+	//setup the renderer including shadow map
+	renderer =  new THREE.WebGLRenderer({antialias:true});
+	renderer.setSize(width,height);
+	renderer.shadowMapEnabled = true;
+	//add meshes and shit
+	document.getElementById("scene").appendChild(renderer.domElement);
+	scene = new THREE.Scene();
+
+	window.addEventListener( 'resize', onResize, false );
+}
+
+
+
+
+
+
+
+function onResize() {
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  camera.aspect = ( window.innerWidth / window.innerHeight );
+  camera.updateProjectionMatrix();
+}
+
+   function animate() {
+    requestAnimationFrame(animate);
+   	var r = Date.now() * 0.0012;
+	var clock = new THREE.Clock();
+ 	var delta = clock.getDelta();
+	controls.update(delta);
+	console.log("I rendered");
+	spotLight.position.x = 10 * Math.cos(r);
+	spotLight.position.z = 10 * Math.sin(r);
+	pointLight.lookAt(mesh.position);
+   render();
+  
+   }
+
+function render() {
+	renderer.render(scene,camera);
+}
+init();
+animate();
