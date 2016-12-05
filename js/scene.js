@@ -185,6 +185,51 @@ function init() {
             object.add(ambientMusic);
 				scene.add( object );
             object.traverse(function (obj) {
+                if (obj instanceof THREE.Mesh) {
+                    obj.receiveShadow = true;
+                    obj.castShadow = true;
+                    obj.geometry.computeVertexNormals();
+                
+                }
+            })
+        });
+      });
+      
+        mtlLoader.load("./models/fire.mtl", function( materials ) {
+        materials.preload();
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.load("./models/fire.obj", function ( object ) {
+        object.position.set(50,0,0);
+        object.rotation.y += -90 * (Math.PI /180)
+        object.scale.set(0.25,0.25,0.25)
+        object.castShadow = true;
+            object.name = "fire";
+            
+				scene.add( object );
+            object.traverse(function (obj) {
+            if (obj instanceof THREE.Mesh) {
+                obj.receiveShadow = true;
+                obj.castShadow = true;
+                obj.geometry.computeVertexNormals();
+                
+            }
+        })
+        });
+        });
+            mtlLoader.load("./models/bed.mtl", function( materials ) {
+        materials.preload();
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.load("./models/bed.obj", function ( object ) {
+        object.position.set(37.5,0.5,-70);
+        object.rotation.y += 90 * (Math.PI /180)
+        object.scale.set(0.12,0.12,0.12)
+        object.castShadow = true;
+            object.name = "desk";
+            
+				scene.add( object );
+            object.traverse(function (obj) {
             if (obj instanceof THREE.Mesh) {
                 obj.receiveShadow = true;
                 obj.castShadow = true;
@@ -194,8 +239,6 @@ function init() {
         })
         });
 
-   
-   
     });
     //misc Objects on desk
    var desk = scene.getObjectByName("desk")
@@ -244,11 +287,14 @@ function init() {
     var area = 600;
     var rainGeo = new THREE.Geometry
     for(var i=0;i<1500;i++) {
-        var particle = new THREE.Vector3(Math.random() * area - area/2,Math.random() * 2000 - 1000/*Math.random() * area * 1.5*/,Math.random() * area - area/2);
+        var particle = new THREE.Vector3(Math.random() * area - area/2,Math.random() * 2000-1000/*Math.random() * area * 1.5*/,Math.random() * area - area/2);
         particle.velocityX = (Math.random() -0.5) / 3;
         particle.velocityY = 0.02 + (Math.random() / 5);
          rainGeo.vertices.push(particle);
     }
+    
+    
+    
     rainGeo.computeBoundingSphere();
      rainCloud = new THREE.Points(rainGeo,rainMat);
      rainCloud.sortParticles = true;
@@ -258,8 +304,31 @@ function init() {
     rainCloud2 = new THREE.Points(rainGeo,rainMat);
     rainCloud2.position.set(0,0,400)
     rainCloud2.frustumCulled = false;
+    
     camera.add(rainCloud);
     camera.add(rainCloud2);
+    var fireArea = 4;
+    var fireGeo =  new THREE.Geometry;
+    var fireTex = THREE.ImageUtils.loadTexture("./textures/fire.png");
+    var fireMat = new THREE.PointCloudMaterial( {size:1, 
+                                                transparent:true, 
+                                                opacity:true,
+                                                map:fireTex,
+                                                blending:THREE.AdditiveBlending,
+                                                sizeAtennuation:true, 
+                                                color:0xff7700})
+      for(var i=0;i<1500;i++) {
+        var particle = new THREE.Vector3(Math.random() * fireArea - fireArea/2,Math.random() * 2000 - 1000/*Math.random() * area * 1.5*/,Math.random() * fireArea - fireArea/2);
+        particle.velocityX = (Math.random() -0.5) / 3 * 0.2;
+        particle.velocityY = 0.02 + (Math.random() / 5 *0.2);
+         fireGeo.vertices.push(particle);
+    }
+    fire = new THREE.Points(fireGeo,fireMat);
+    fire.position.set(48,0,0);
+//    var fireTex = THREE.ImageUtils.loadTexture("./textures/fire.png");
+//    var fire = new THREE.Fire(fireTex,0xff7700);
+//    fire.position.set(48,-0.2,0);
+//    scene.add(fire);
     // sounds
     
     var listener =  new THREE.AudioListener();
@@ -280,8 +349,10 @@ function init() {
 //    mesh.add(ambientMusic);
     
 	  //lighting
-    
-	var ambient = new THREE.AmbientLight( 0xFfffff, 0.1);
+    var firePointLight = new THREE.PointLight(0xff7700,1,50);
+    firePointLight.position.set(50,-10,0);
+    firePointLight.castShadow =  true;
+	var ambient = new THREE.AmbientLight( 0xffffff, 0.1);
 	pointLight = new THREE.PointLight(0xffffff, 0.6);
     pointLight.castShadow = true;
 	 var directionalLight = new THREE.DirectionalLight(0xc7d1e0,0.7);
@@ -309,9 +380,11 @@ function init() {
     scene.add(ceilingMesh);
 	scene.add(ambient);
     scene.add(pointLight);
+    scene.add(firePointLight);
     scene.add(mesh);
     scene.add(rainCloud);
     scene.add(rainCloud2);
+    scene.add(fire);
     scene.add(vinyl);
     scene.add(album);
 	//positioning
@@ -500,6 +573,14 @@ function animate() {
                 if (v.x <= -20 || v.x >= 20) v.velocityX = v.velocityX * -1;
             });
             rainCloud2.geometry.verticesNeedUpdate = true;
+    var fireCloud = fire.geometry.vertices;
+            fireCloud.forEach(function (v) {
+                v.y = v.y + (v.velocityY);
+                v.x = v.x + (v.velocityX);
+                if (v.y >= 6) v.y = 0;
+                if (v.x >= 5 || v.x <= -5) v.velocityX = v.velocityX * -1;
+            });
+            fire.geometry.verticesNeedUpdate = true;
     
     
 	//console.log("I rendered");
