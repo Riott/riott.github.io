@@ -197,12 +197,16 @@ function init() {
    
    
     });
-    
+    //misc Objects on desk
    var desk = scene.getObjectByName("desk")
     console.log("desk:"+desk);
     var vinylGeo = new THREE.CylinderBufferGeometry(1.2,1.2,0.05,32);
     vinyl = createNormalMesh(vinylGeo,"./textures/vinyl.png","./textures/vinylNormal.png",1,1,0.1,true);
     vinyl.position.set(-21.2,6.2,89.93);
+    var albumGeo = new THREE.BoxBufferGeometry(5,0.2,5);
+    var album = createNormalMesh(albumGeo,"./textures/album.png","./textures/albumNormal.png",1,1,0.1,true);
+    album.position.set (-30,5.8,90);
+    album.rotation.y = 165 * (Math.PI /180);
     
     
     //randomly generate skyline buildings
@@ -308,6 +312,8 @@ function init() {
     scene.add(mesh);
     scene.add(rainCloud);
     scene.add(rainCloud2);
+    scene.add(vinyl);
+    scene.add(album);
 	//positioning
 	pointLight.position.set(-35,8,70);
 	
