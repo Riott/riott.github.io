@@ -9,6 +9,7 @@ var rainCloud;
 var rainCloud2;
 var raycaster;
 var ambientMusic;
+var vinyl;
 //check if the browser supports pointerlockAPI
 
 var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document ||  'webkitPointerLockElement' in document;
@@ -89,7 +90,7 @@ function init() {
     
     //camera setup
     //was 60 fov now 45
-	camera = new THREE.PerspectiveCamera(45, width/height, 1, 1000);
+	camera = new THREE.PerspectiveCamera(45, width/height, 0.1, 1000);
     controlsEnabled = false;
     //camera.rotation.y = 90  * (Math.PI /180);
     
@@ -110,7 +111,9 @@ function init() {
     
     var walls = []
     var shortWallGeo = new THREE.BoxBufferGeometry(1,20,100);
+    shortWallGeo.computeBoundingSphere()
     var longWallGeo = new THREE.BoxBufferGeometry(1,20,200);
+    longWallGeo.computeBoundingSphere()
     longWallGeo.computeFaceNormals();
        
     walls[0] = createNormalMesh(longWallGeo,"./textures/window.png","./textures/windowNormal.png",4,1,10,true);
@@ -133,6 +136,7 @@ function init() {
     for (var i = 0; i < walls.length;i++) {
                 scene.add(walls[i]);
         walls[i].receiveShadow = true;
+        walls[i].frustumCulled = false;
         
                 objects.push(walls[i]);
     }
@@ -162,6 +166,7 @@ function init() {
     for(var i = 0;i<blockers.length;i++) {
         scene.add(blockers[i]);
         blockers[i].castShadow = true;
+        blockers[i].frustumCulled = false;
     }
     
     
@@ -179,6 +184,14 @@ function init() {
             object.name = "desk";
             object.add(ambientMusic);
 				scene.add( object );
+            object.traverse(function (obj) {
+            if (obj instanceof THREE.Mesh) {
+                obj.receiveShadow = true;
+                obj.castShadow = true;
+                obj.geometry.computeVertexNormals();
+                
+            }
+        })
         });
 
    
@@ -187,8 +200,9 @@ function init() {
     
    var desk = scene.getObjectByName("desk")
     console.log("desk:"+desk);
-    
-    
+    var vinylGeo = new THREE.CylinderBufferGeometry(1.2,1.2,0.05,32);
+    vinyl = createNormalMesh(vinylGeo,"./textures/vinyl.png","./textures/vinylNormal.png",1,1,0.1,true);
+    vinyl.position.set(-21.2,6.2,89.93);
     
     
     //randomly generate skyline buildings
@@ -239,7 +253,9 @@ function init() {
     rainCloud.position.set(-400,0,0)
     rainCloud2 = new THREE.Points(rainGeo,rainMat);
     rainCloud2.position.set(0,0,400)
-    
+    rainCloud2.frustumCulled = false;
+    camera.add(rainCloud);
+    camera.add(rainCloud2);
     // sounds
     
     var listener =  new THREE.AudioListener();
@@ -248,7 +264,7 @@ function init() {
      ambientMusic = new THREE.PositionalAudio( listener );
 				audioLoader.load( "./sounds/Winterlude.mp3", function( buffer ) {
 					ambientMusic.setBuffer( buffer );
-					ambientMusic.setRefDistance( 5 );
+					ambientMusic.setRefDistance( 20 );
                     ambientMusic.setLoop(true);
 					ambientMusic.play();
 				});
@@ -300,11 +316,6 @@ function init() {
 	
 	
 	
-	var helper = new THREE.GridHelper( 5000, 2, 0xffffff, 0xffffff );
-					scene.add( helper );
-	
-	
-	
 	
 	
 	
@@ -317,6 +328,7 @@ function init() {
   var controller = controls.getObject();
     controller.rotation.y = 180  * (Math.PI /180);
     controller.position.set(0,10,-80)
+    controller.frustumCulled = false;
 	scene.add(controls.getObject());
 	var onKeyDown = function ( event ) {
 					switch ( event.keyCode ) {
@@ -434,7 +446,10 @@ function onResize() {
 function animate() {
 	requestAnimationFrame(animate);
    // console.log(camera.position);
-    
+    if(ambientMusic.isPlaying) {
+        vinyl.rotation.y += Math.sin(2) * (Math.PI  / 180) * 0.8;
+        
+    }
   	if ( controlsEnabled ) {
 					raycaster.ray.origin.copy( controls.getObject().position );
 					raycaster.ray.origin.y -= 10;
