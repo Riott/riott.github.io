@@ -89,7 +89,7 @@ function interact() {
     for (var i = 0; i < intersections.length; i++) {
         console.log(intersections);
 
-       // intersections[i].object.material.color.set(0xff0000);
+        // intersections[i].object.material.color.set(0xff0000);
 
         switch (intersections[i].object.name) {
         case "album":
@@ -100,26 +100,25 @@ function interact() {
             }
 
             break;
-            case "MusicBoxStand":
+        case "MusicBoxStand":
             if (ambientMusicPlaying) {
                 pauseAmbientAudio();
                 musicBoxMusic.play();
             } else if (musicBoxMusic.isPlaying) {
                 musicBoxMusic.stop();
-               
+
             } else {
                 musicBoxMusic.play();
             }
-                break;
-                
-            case "SpotlightStand":
-                if(lampSpotLight.intensity == 1){
-                    lampSpotLight.intensity = 0;
-                }
-                else {
-                    lampSpotLight.intensity = 1;
-                }
-                break;
+            break;
+
+        case "SpotlightStand":
+            if (lampSpotLight.intensity == 1) {
+                lampSpotLight.intensity = 0;
+            } else {
+                lampSpotLight.intensity = 1;
+            }
+            break;
         }
     } // }
 }
@@ -172,13 +171,13 @@ function init() {
     longWallGeo.computeBoundingSphere()
     longWallGeo.computeFaceNormals();
 
-    var divideWallGeo = new THREE.BoxBufferGeometry(1, 20, 40);
+    var divideWallGeo = new THREE.BoxBufferGeometry(0.5, 20, 40);
     walls[0] = createNormalMesh(longWallGeo, "./textures/window.png", "./textures/windowNormal.png", 4, 1, 10, true);
     walls[0].position.set(-50.5, 10.5, 0);
-    // walls[1] = createNormalMesh(longWallGeo,"./textures/plaster.jpg","./textures/plaster.png",4,1,4, true);
-    walls[1] = new THREE.Mesh(longWallGeo, new THREE.MeshPhongMaterial({
-        color: 0xe8eff9
-    }));
+    walls[1] = createNormalMesh(longWallGeo, "./textures/wall2.jpg", "./textures/wall2.png", 4, 1, 3, true);
+    /* walls[1] = new THREE.Mesh(longWallGeo, new THREE.MeshPhongMaterial({
+         color: 0xe8eff9
+     }));*/
     walls[1].position.set(50.5, 10.5, 0);
     //walls[2] = createNormalMesh(shortWallGeo,"./textures/plaster.jpg","./textures/plaster.png",4,1,4, true);
     //    walls[2] =  new THREE.Mesh(shortWallGeo,new THREE.MeshPhongMaterial({color:0xe8eff9}));
@@ -187,18 +186,24 @@ function init() {
     walls[2] = createNormalMesh(shortWallGeo, "./textures/window.png", "./textures/windowNormal.png", 2, 1, 10, true);
     walls[2].position.set(0, 10.5, 100.5);
     walls[2].rotation.set(0, 90 * (Math.PI / 180), 0)
-        //walls[4] = createNormalMesh(shortWallGeo,"./textures/plaster.jpg","./textures/plaster.png",4,2, true);
-    walls[3] = new THREE.Mesh(shortWallGeo, new THREE.MeshPhongMaterial({
+    walls[3] = createNormalMesh(shortWallGeo, "./textures/wall2.jpg", "./textures/wall2.png", 4, 1, 3, true);
+    /*walls[3] = new THREE.Mesh(shortWallGeo, new THREE.MeshPhongMaterial({
         color: 0xe8eff9
-    }));
+    }));*/
     walls[3].position.set(0, 10.5, -100.5);
     walls[3].rotation.set(0, 90 * (Math.PI / 180), 0);
     walls[4] = new THREE.Mesh(divideWallGeo, new THREE.MeshPhongMaterial({
-        color: 0xe8eff9
+        color: 0xafceff
     }));
-    walls[4].position.set(30, 10.5, -40);
+    walls[4].position.set(30, 10.5, 40);
     walls[4].rotation.set(0, 90 * (Math.PI / 180), 0)
     walls[4].castShadow = true;
+    walls[5] = new THREE.Mesh(divideWallGeo, new THREE.MeshPhongMaterial({
+        color: 0xafceff
+    }));
+    walls[5].position.set(30, 10.5, -40);
+    walls[5].rotation.set(0, 90 * (Math.PI / 180), 0)
+    walls[5].castShadow = true;
     for (var i = 0; i < walls.length; i++) {
         scene.add(walls[i]);
         walls[i].receiveShadow = true;
@@ -239,10 +244,10 @@ function init() {
 
     var standGeo = new THREE.BoxBufferGeometry(3, 8, 3);
     var stand1 = new THREE.Mesh(standGeo, new THREE.MeshPhongMaterial({
-        color: 0xe8eff9
+        color: /*0xe8eff9*/ 0xafceff
     }));
     var stand2 = new THREE.Mesh(standGeo, new THREE.MeshPhongMaterial({
-        color: 0xe8eff9
+        color: 0xafceff
     }));
     stand1.name = "MusicBoxStand";
     stand1.position.set(48, 3.5, -43.5);
@@ -325,6 +330,75 @@ function init() {
             })
         });
     });
+    mtlLoader.load("./models/sofa.mtl", function (materials) {
+        materials.preload();
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.load("./models/sofa.obj", function (object) {
+            object.position.set(18, 0, 2.5);
+            object.rotation.y += -90 * (Math.PI / 180)
+            object.scale.set(0.25, 0.25, 0.25)
+            object.castShadow = true;
+            object.name = "sofa";
+
+            scene.add(object);
+            object.traverse(function (obj) {
+                if (obj instanceof THREE.Mesh) {
+                    obj.receiveShadow = true;
+                    obj.castShadow = true;
+                    obj.geometry.computeVertexNormals();
+
+                }
+            })
+        });
+    });
+
+    mtlLoader.load("./models/stool.mtl", function (materials) {
+        materials.preload();
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.load("./models/stool.obj", function (object) {
+            object.position.set(30, 0, 70);
+            object.rotation.y += -90 * (Math.PI / 180)
+            object.scale.set(0.25, 0.25, 0.25)
+            object.castShadow = true;
+            object.name = "stool";
+
+            scene.add(object);
+            object.traverse(function (obj) {
+                if (obj instanceof THREE.Mesh) {
+                    obj.receiveShadow = true;
+                    obj.castShadow = true;
+                    obj.geometry.computeVertexNormals();
+
+                }
+            })
+        });
+    });
+
+    mtlLoader.load("./models/table.mtl", function (materials) {
+        materials.preload();
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.load("./models/table.obj", function (object) {
+            object.position.set(30, 0, 0);
+            object.rotation.y += -90 * (Math.PI / 180)
+            object.scale.set(0.25, 0.25, 0.25)
+            object.castShadow = true;
+            object.name = "table";
+
+            scene.add(object);
+            object.traverse(function (obj) {
+                if (obj instanceof THREE.Mesh) {
+                    obj.receiveShadow = true;
+                    obj.castShadow = true;
+                    obj.geometry.computeVertexNormals();
+
+                }
+            })
+        });
+    });
+
     mtlLoader.load("./models/lamp.mtl", function (materials) {
         materials.preload();
         var objLoader = new THREE.OBJLoader();
@@ -467,8 +541,8 @@ function init() {
     //    var fire = new THREE.Fire(fireTex,0xff7700);
     //    fire.position.set(48,-0.2,0);
     //    scene.add(fire);
-    
-    
+
+
     // Music
 
     var listener = new THREE.AudioListener();
@@ -503,11 +577,12 @@ function init() {
     //pointLight = new THREE.PointLight(0xffffff, 0.6);
     //pointLight.castShadow = true;
     var directionalLight = new THREE.DirectionalLight(0xc7d1e0, 0.7);
-    lampSpotLight = new THREE.SpotLight(0xffbb73,0);
-   // var spotLightHelper = new THREE.SpotLightHelper(lampSpotLight);
+    lampSpotLight = new THREE.SpotLight(0xffbb73, 1, 14);
+    // var spotLightHelper = new THREE.SpotLightHelper(lampSpotLight);
     lampSpotLight.castShadow = true;
-    lampSpotLight.target= stand1;
-    lampSpotLight.angle = 60 * (Math.PI/180);
+    lampSpotLight.exponent = 10;
+    lampSpotLight.target = stand1;
+    lampSpotLight.angle = 60 * (Math.PI / 180);
     lampSpotLight.penumbra = 2;
     lampSpotLight.position.set(48, 9.8, -52.3);
     // directionalLight.position.set(-200,500,-200)
@@ -537,7 +612,7 @@ function init() {
     //scene.add(pointLight);
     scene.add(firePointLight);
     scene.add(lampSpotLight);
-   // scene.add(spotLightHelper);
+    // scene.add(spotLightHelper);
     scene.add(mesh);
     scene.add(rainCloud);
     scene.add(rainCloud2);
@@ -753,7 +828,7 @@ function animate() {
         vinyl.rotation.y += Math.sin(2) * (Math.PI / 180) * 0.8;
 
     }
-     if (musicBoxMusic.isPlaying) {
+    if (musicBoxMusic.isPlaying) {
         scene.getChildByName("musicBox").rotation.y += Math.sin(2) * (Math.PI / 180) * 0.8;
 
     }
