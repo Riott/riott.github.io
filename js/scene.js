@@ -3,8 +3,8 @@ var height = window.innerHeight;
 var controls;
 var objects = [];
 var stool = [];
-var rainCloud;
-var rainCloud2;
+var snowCloud;
+var snowCloud2;
 var raycaster;
 var raycasterInteract;
 var mouse;
@@ -19,11 +19,10 @@ var vinyl;
 var interact;
 var lampSpotLight;
 //check if the browser supports pointerlockAPI
-
 var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
 var screenBlock = document.getElementById('blocker');
 var instructions = document.getElementById('instructions');
-//pointer lock code block used from thje pointerLock threeJS example
+//pointer lock code block used from the pointerLock threeJS example
 if (havePointerLock) {
     var element = document.body;
     var pointerlockchange = function (event) {
@@ -300,6 +299,10 @@ function init() {
     stand2.castShadow = true;
     stand2.receiveShadow = true;
 
+    var photoGeo = new THREE.BoxBufferGeometry(3, 0.2, 2);
+    var photo = createNormalMesh(photoGeo, "./textures/besties.png", "./textures/photoNormal.png", 1, 1, 0.4, false);
+    photo.position.set(35, 6, 36);
+    photo.rotation.set(-45 * Math.PI / 180, 180 * (Math.PI / 180), 0);
     //bar and kitchen area
 
 
@@ -325,7 +328,7 @@ function init() {
                     obj.receiveShadow = true;
                     obj.castShadow = true;
                     obj.geometry.computeVertexNormals();
-                    obj.el = el;
+                    //obj.el = el;
 
                 }
             })
@@ -459,20 +462,7 @@ function init() {
 
                 }
             })
-            for (var i = 0; i < stool.length; i++) {
-                stool[i].traverse(function (obj) {
-                    if (obj instanceof THREE.Mesh) {
-                        obj.receiveShadow = true;
-                        obj.castShadow = true;
 
-
-                        obj.geometry.computeVertexNormals();
-
-
-
-                    }
-                })
-            }
         });
     });
     //duplicate stool
@@ -489,6 +479,28 @@ function init() {
             object.scale.set(0.25, 0.25, 0.25)
             object.castShadow = true;
             object.name = "table";
+
+            scene.add(object);
+            object.traverse(function (obj) {
+                if (obj instanceof THREE.Mesh) {
+                    obj.receiveShadow = true;
+                    obj.castShadow = true;
+                    obj.geometry.computeVertexNormals();
+
+                }
+            })
+        });
+    });
+    mtlLoader.load("./models/bookshelf.mtl", function (materials) {
+        materials.preload();
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.load("./models/bookshelf.obj", function (object) {
+            object.position.set(35, 1.5, 39);
+            //object.rotation.y +=  * (Math.PI / 180)
+            object.scale.set(0.5, 0.5, 0.5)
+            object.castShadow = true;
+            object.name = "bookshelf";
 
             scene.add(object);
             object.traverse(function (obj) {
@@ -644,17 +656,17 @@ function init() {
 
 
     rainGeo.computeBoundingSphere();
-    rainCloud = new THREE.Points(rainGeo, rainMat);
-    rainCloud.sortParticles = true;
+    snowCloud = new THREE.Points(rainGeo, rainMat);
+    snowCloud.sortParticles = true;
 
-    rainCloud.frustumCulled = false;
-    rainCloud.position.set(-400, 0, 0)
-    rainCloud2 = new THREE.Points(rainGeo, rainMat);
-    rainCloud2.position.set(0, 0, 400)
-    rainCloud2.frustumCulled = false;
+    snowCloud.frustumCulled = false;
+    snowCloud.position.set(-400, 0, 0)
+    snowCloud2 = new THREE.Points(rainGeo, rainMat);
+    snowCloud2.position.set(0, 0, 400)
+    snowCloud2.frustumCulled = false;
 
-    camera.add(rainCloud);
-    camera.add(rainCloud2);
+    camera.add(snowCloud);
+    camera.add(snowCloud2);
     var fireArea = 4;
     var fireGeo = new THREE.Geometry;
     var fireTex = THREE.ImageUtils.loadTexture("./textures/fire.png");
@@ -758,13 +770,14 @@ function init() {
     scene.add(lampSpotLight);
     // scene.add(spotLightHelper);
     scene.add(mesh);
-    scene.add(rainCloud);
-    scene.add(rainCloud2);
+    scene.add(snowCloud);
+    scene.add(snowCloud2);
     scene.add(fire);
     scene.add(vinyl);
     scene.add(album);
     scene.add(stand1);
     scene.add(stand2);
+    scene.add(photo);
     //positioning
     //pointLight.position.set(-35,8,70);
     var ceilingLights = [];
@@ -1010,22 +1023,22 @@ function animate() {
 
 
     }
-    var rain = rainCloud.geometry.vertices;
+    var rain = snowCloud.geometry.vertices;
     rain.forEach(function (v) {
         v.y = v.y - (v.velocityY);
         v.x = v.x - (v.velocityX);
         if (v.y <= 0) v.y = 60;
         if (v.x <= -20 || v.x >= 20) v.velocityX = v.velocityX * -1;
     });
-    rainCloud.geometry.verticesNeedUpdate = true;
-    var rain2 = rainCloud2.geometry.vertices;
+    snowCloud.geometry.verticesNeedUpdate = true;
+    var rain2 = snowCloud2.geometry.vertices;
     rain2.forEach(function (v) {
         v.y = v.y - (v.velocityY);
         v.x = v.x - (v.velocityX);
         if (v.y <= 0) v.y = 60;
         if (v.x <= -20 || v.x >= 20) v.velocityX = v.velocityX * -1;
     });
-    rainCloud2.geometry.verticesNeedUpdate = true;
+    snowCloud2.geometry.verticesNeedUpdate = true;
     var fireCloud = fire.geometry.vertices;
     fireCloud.forEach(function (v) {
 
@@ -1050,5 +1063,6 @@ function animate() {
 function render() {
     renderer.render(scene, camera);
 }
+
 init();
 animate();
