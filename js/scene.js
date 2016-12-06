@@ -252,6 +252,7 @@ function init() {
     stand2.position.set(48, 3.5, -53.5);
     stand2.castShadow = true;
     stand2.receiveShadow = true;
+    stand2.castShadow =true;
 
 
     //import models
