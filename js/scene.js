@@ -2,12 +2,17 @@ var width = window.innerWidth;
 var height = window.innerHeight;
 var controls;
 var objects = [];
+var stool = [];
 var rainCloud;
 var rainCloud2;
 var raycaster;
 var raycasterInteract;
 var mouse;
 var ambientMusic;
+var piano;
+var vinylPlayer;
+var musicBox;
+var pianoScale;
 var musicBoxMusic;
 var ambientMusicPlaying = false;
 var vinyl;
@@ -73,7 +78,6 @@ var moveForward = false;
 var moveBackward = false;
 var moveLeft = false;
 var moveRight = false;
-var canJump = false;
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
 //end code block
@@ -84,13 +88,14 @@ function interact() {
     raycaster.ray.direction.copy(controls.getObject().rotation)
         //raycaster.ray.far = 0.5;
     raycaster.far = 10;
+    raycaster.ray.intersectHidden = true;
     raycaster.setFromCamera(mouse, camera);
     var intersections = raycaster.intersectObjects(scene.children)
     for (var i = 0; i < intersections.length; i++) {
         console.log(intersections);
 
         // intersections[i].object.material.color.set(0xff0000);
-
+        //console.log(intersections[i].object.parent.name);
         switch (intersections[i].object.name) {
         case "album":
             if (ambientMusicPlaying) {
@@ -100,7 +105,7 @@ function interact() {
             }
 
             break;
-        case "MusicBoxStand":
+        case "musicBoxTrig":
             if (ambientMusicPlaying) {
                 pauseAmbientAudio();
                 musicBoxMusic.play();
@@ -111,8 +116,18 @@ function interact() {
                 musicBoxMusic.play();
             }
             break;
+        case "piano":
+            if (ambientMusicPlaying) {
+                pauseAmbientAudio();
+                pianoScale.play();
+            } else if (musicBoxMusic.isPlaying) {
+                pianoScale.stop();
 
-        case "SpotlightStand":
+            } else {
+                pianoScale.play();
+            }
+            break;
+        case "spotLight":
             if (lampSpotLight.intensity == 1) {
                 lampSpotLight.intensity = 0;
             } else {
@@ -172,6 +187,9 @@ function init() {
     longWallGeo.computeFaceNormals();
 
     var divideWallGeo = new THREE.BoxBufferGeometry(0.5, 20, 40);
+    var barWallGeo = new THREE.BoxBufferGeometry(0.5, 8, 40);
+    var barGeo = new THREE.BoxBufferGeometry(0.5, 2.5, 40);
+
     walls[0] = createNormalMesh(longWallGeo, "./textures/window.png", "./textures/windowNormal.png", 4, 1, 10, true);
     walls[0].position.set(-50.5, 10.5, 0);
     walls[1] = createNormalMesh(longWallGeo, "./textures/wall2.jpg", "./textures/wall2.png", 4, 1, 3, true);
@@ -204,6 +222,27 @@ function init() {
     walls[5].position.set(30, 10.5, -40);
     walls[5].rotation.set(0, 90 * (Math.PI / 180), 0)
     walls[5].castShadow = true;
+
+    walls[6] = new THREE.Mesh(barWallGeo, new THREE.MeshPhongMaterial({
+        color: 0xafceff
+    }));
+    walls[6].position.set(6, 4.1, 80);
+    //walls[6].rotation.set(0, 90 * (Math.PI / 180), 0)
+    walls[6].castShadow = true;
+    walls[7] = new THREE.Mesh(barWallGeo, new THREE.MeshPhongMaterial({
+        color: 0xafceff
+    }));
+    walls[7].position.set(6, 4.1, 80);
+    walls[7].rotation.set(90 * (Math.PI / 180), 0, 0)
+    walls[7].castShadow = true;
+    walls[8] = new THREE.Mesh(barGeo, new THREE.MeshPhongMaterial({
+        color: 0xafceff
+    }));
+    walls[8].position.set(7.5, 7.5, 80);
+    walls[8].rotation.set(0, 0, 90 * (Math.PI / 180))
+    walls[8].castShadow = true;
+
+
     for (var i = 0; i < walls.length; i++) {
         scene.add(walls[i]);
         walls[i].receiveShadow = true;
@@ -218,6 +257,8 @@ function init() {
         color: 0x000000,
         alpha: 0
     });
+    // create light blockers behind the wooden textures to imitate the effect of light outside hitting the beams
+
     var blockers = [];
     blockers[0] = new THREE.Mesh(doubleBeamGeo, simpleMat);
     blockers[0].position.set(-50.2, 10.5, 0);
@@ -242,6 +283,7 @@ function init() {
         blockers[i].frustumCulled = false;
     }
 
+    //bedroom stands
     var standGeo = new THREE.BoxBufferGeometry(3, 8, 3);
     var stand1 = new THREE.Mesh(standGeo, new THREE.MeshPhongMaterial({
         color: /*0xe8eff9*/ 0xafceff
@@ -257,7 +299,9 @@ function init() {
     stand2.position.set(48, 3.5, -53.5);
     stand2.castShadow = true;
     stand2.receiveShadow = true;
-    stand2.castShadow =true;
+
+    //bar and kitchen area
+
 
 
     //import models
@@ -271,14 +315,17 @@ function init() {
             object.rotation.y += 180 * (Math.PI / 180)
             object.scale.set(0.5, 0.5, 0.5)
             object.castShadow = true;
-            object.name = "desk";
+            object.name = "album";
             object.add(ambientMusic);
-            scene.add(object);
+            vinylPlayer = object;
+            vinylPlayer.userData.name = "album";
+            scene.add(vinylPlayer);
             object.traverse(function (obj) {
                 if (obj instanceof THREE.Mesh) {
                     obj.receiveShadow = true;
                     obj.castShadow = true;
                     obj.geometry.computeVertexNormals();
+                    obj.el = el;
 
                 }
             })
@@ -295,6 +342,7 @@ function init() {
             object.scale.set(0.1, 0.1, 0.1)
             object.castShadow = true;
             object.name = "musicBox";
+            musicBox = object;
             object.add(musicBoxMusic);
             scene.add(object);
             object.traverse(function (obj) {
@@ -353,28 +401,83 @@ function init() {
         });
     });
 
-    mtlLoader.load("./models/stool.mtl", function (materials) {
+    mtlLoader.load("./models/piano.mtl", function (materials) {
         materials.preload();
         var objLoader = new THREE.OBJLoader();
         objLoader.setMaterials(materials);
-        objLoader.load("./models/stool.obj", function (object) {
-            object.position.set(30, 0, 70);
-            object.rotation.y += -90 * (Math.PI / 180)
+        objLoader.load("./models/piano.obj", function (object) {
+            object.position.set(-35, 0, 2.5);
+            //object.rotation.y += 180 * (Math.PI / 180)
             object.scale.set(0.25, 0.25, 0.25)
             object.castShadow = true;
-            object.name = "stool";
+            object.name = "piano";
 
+            object.add(pianoScale);
+            piano = object;
+            piano.name = "piano";
             scene.add(object);
             object.traverse(function (obj) {
                 if (obj instanceof THREE.Mesh) {
                     obj.receiveShadow = true;
                     obj.castShadow = true;
                     obj.geometry.computeVertexNormals();
+                    object.name = "piano";
 
                 }
             })
         });
     });
+    mtlLoader.load("./models/stool.mtl", function (materials) {
+        materials.preload();
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.load("./models/stool.obj", function (object) {
+            object.position.set(11, 0.5, 72);
+            object.rotation.y += -90 * (Math.PI / 180)
+            object.scale.set(0.25, 0.25, 0.25)
+            object.castShadow = true;
+            object.name = "stool";
+            stool[0] = object.clone();
+            stool[1] = object.clone();
+            stool[2] = object.clone();
+            stool[0].position.set(11, 0.5, 88);
+            stool[1].position.set(11, 0.5, 98);
+            stool[2].position.set(11, 0.5, 65);
+            scene.add(object);
+            scene.add(stool[0]);
+            scene.add(stool[1]);
+            scene.add(stool[2]);
+            object.traverse(function (obj) {
+                if (obj instanceof THREE.Mesh) {
+                    obj.receiveShadow = true;
+                    obj.castShadow = true;
+
+
+                    obj.geometry.computeVertexNormals();
+
+
+
+                }
+            })
+            for (var i = 0; i < stool.length; i++) {
+                stool[i].traverse(function (obj) {
+                    if (obj instanceof THREE.Mesh) {
+                        obj.receiveShadow = true;
+                        obj.castShadow = true;
+
+
+                        obj.geometry.computeVertexNormals();
+
+
+
+                    }
+                })
+            }
+        });
+    });
+    //duplicate stool
+
+
 
     mtlLoader.load("./models/table.mtl", function (materials) {
         materials.preload();
@@ -398,6 +501,8 @@ function init() {
             })
         });
     });
+
+
 
     mtlLoader.load("./models/lamp.mtl", function (materials) {
         materials.preload();
@@ -430,14 +535,14 @@ function init() {
             object.rotation.y += 90 * (Math.PI / 180)
             object.scale.set(0.12, 0.12, 0.12)
             object.castShadow = true;
-            object.name = "desk";
+            object.name = "bed";
 
             scene.add(object);
             object.traverse(function (obj) {
                 if (obj instanceof THREE.Mesh) {
                     obj.receiveShadow = true;
                     obj.castShadow = true;
-                    obj.name = "deskparts";
+                    obj.name = "bed";
                     obj.geometry.computeVertexNormals();
                     objects.push(obj);
 
@@ -446,18 +551,51 @@ function init() {
         });
 
     });
+
+
+
     //misc Objects on desk
     var desk = scene.getObjectByName("desk")
     console.log("desk:" + desk);
     var vinylGeo = new THREE.CylinderBufferGeometry(1.2, 1.2, 0.05, 32);
     vinyl = createNormalMesh(vinylGeo, "./textures/vinyl.png", "./textures/vinylNormal.png", 1, 1, 0.1, true);
     vinyl.position.set(-21.2, 6.2, 89.93);
+    vinyl.name = "album"
     var albumGeo = new THREE.BoxBufferGeometry(5, 0.2, 5);
     var album = createNormalMesh(albumGeo, "./textures/album.png", "./textures/albumNormal.png", 1, 1, 0.1, true);
     album.position.set(-30, 5.8, 90);
     album.rotation.y = 165 * (Math.PI / 180);
     album.name = "album";
 
+    //invisible trigger meshes 
+
+    var bigTriggerGeo = new THREE.BoxBufferGeometry(20, 10, 10);
+    var smallTriggerGeo = new THREE.BoxBufferGeometry(5, 10, 5);
+    var deskTrigger = new THREE.Mesh(bigTriggerGeo, new THREE.MeshLambertMaterial());
+    deskTrigger.position.set(-25, 5, 90);
+    deskTrigger.name = "album";
+    deskTrigger.material.visible = false;
+    scene.add(deskTrigger);
+    var pianoTrigger = new THREE.Mesh(bigTriggerGeo, new THREE.MeshLambertMaterial());
+    pianoTrigger.position.set(-30, 5, 2.5);
+    pianoTrigger.rotation.set(0, 90 * (Math.PI / 180), 0);
+    pianoTrigger.name = "piano";
+    pianoTrigger.material.visible = false;
+    scene.add(pianoTrigger);
+
+    var musicBoxTrigger = new THREE.Mesh(smallTriggerGeo, new THREE.MeshLambertMaterial());
+    musicBoxTrigger.position.set(48, 5, -42.5);
+
+    musicBoxTrigger.name = "musicBoxTrig";
+    musicBoxTrigger.material.visible = false;
+    scene.add(musicBoxTrigger);
+
+    var spotLightTrigger = new THREE.Mesh(smallTriggerGeo, new THREE.MeshLambertMaterial());
+    spotLightTrigger.position.set(48, 5, -52.5);
+
+    spotLightTrigger.name = "spotLight";
+    spotLightTrigger.material.visible = false;
+    scene.add(spotLightTrigger);
 
     //randomly generate skyline buildings
     var buildings = [];
@@ -561,6 +699,12 @@ function init() {
         musicBoxMusic.setBuffer(buffer);
         musicBoxMusic.setRefDistance(20);
         musicBoxMusic.setLoop(false);
+    });
+    pianoScale = new THREE.PositionalAudio(listener);
+    audioLoader.load("./sounds/majorscale.mp3", function (buffer) {
+        pianoScale.setBuffer(buffer);
+        pianoScale.setRefDistance(20);
+        pianoScale.setLoop(false);
     });
 
 
